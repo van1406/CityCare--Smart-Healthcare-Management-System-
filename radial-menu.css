@@ -1,0 +1,289 @@
+/* ==========================================================================
+   CityCare – Purple Radial Navigation Menu
+   Adapted from the supplied "MENU.txt" design.
+   --------------------------------------------------------------------------
+   ISOLATION: no global selectors (body / html / button / input / a).
+   Every rule is scoped under .radial-dock and the CSS variables are
+   declared on .radial-dock (NOT on :root) so this file cannot leak styles
+   into registration, complaint or tracking pages.
+   Loaded ONLY by the three dashboard JSPs.
+   ========================================================================== */
+
+.radial-dock {
+    /* palette */
+    --rm-bar-bg: #0c0c12;
+    --rm-accent: #9257ef;
+    --rm-accent-btn: radial-gradient(circle at 35% 30%, #cba9ff, #9257ef 65%);
+    --rm-accent-item: radial-gradient(circle at 32% 28%, #c9a3ff, #8b4fe0 70%);
+    --rm-text-dim: #8b86a0;
+    --rm-radius: 120px;
+    --rm-fab-size: 75px;
+    --rm-item-size: 70px;
+    --rm-bar-h: 88px;
+
+    position: fixed;
+    left: calc(50% + 130px); /* centred inside the main area (260px sidebar) */
+    bottom: 14px;
+    transform: translateX(-50%);
+    width: min(92vw, 400px);
+    z-index: 90; /* below .sidebar (100) so the sidebar is never covered */
+}
+
+/* -------------------------------------------------------------
+   Bottom navigation bar
+   ------------------------------------------------------------- */
+.radial-dock .radial-bar {
+    position: relative;
+    height: var(--rm-bar-h);
+    background: var(--rm-bar-bg);
+    border-bottom-left-radius: 28px;
+    border-bottom-right-radius: 28px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+
+    -webkit-mask-image: radial-gradient(circle 46px at 50% 0px, transparent 98%, black 100%);
+            mask-image: radial-gradient(circle 46px at 50% 0px, transparent 98%, black 100%);
+}
+
+.radial-dock .radial-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--rm-text-dim);
+    font-family: inherit;
+    font-size: 13px;
+    transition: color 0.25s ease;
+}
+
+.radial-dock .radial-item i {
+    font-size: 22px;
+    transition: stroke 0.25s ease, fill 0.25s ease, transform 0.25s ease;
+}
+
+.radial-dock .radial-item:hover {
+    color: #c9a8ff;
+}
+
+.radial-dock .radial-item:hover i {
+    transform: translateY(-2px);
+}
+
+.radial-dock .radial-item.active {
+    color: #c9a8ff;
+}
+
+.radial-dock .radial-home-dot {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* -------------------------------------------------------------
+   Radial container (zero-size anchor at the top-centre of the bar)
+   ------------------------------------------------------------- */
+.radial-dock .radial-nav {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 0;
+    height: 0;
+    z-index: 5;
+}
+
+.radial-dock .radial-toggle {
+    display: none;
+}
+
+/* -------------------------------------------------------------
+   Centre FAB (plus -> x morph)
+   ------------------------------------------------------------- */
+.radial-dock .radial-fab {
+    width: var(--rm-fab-size);
+    height: var(--rm-fab-size);
+    background: var(--rm-accent-btn);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(1.02);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 25px;
+    cursor: pointer;
+    z-index: 2;
+    box-shadow: 0 10px 30px rgba(120, 60, 220, 0.25);
+    transition: 400ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.radial-dock .radial-toggle:checked + .radial-fab {
+    transform: translate(-50%, -50%) scale(0.9);
+}
+
+.radial-dock .radial-fab .bar {
+    position: absolute;
+    width: 22px;
+    height: 2.6px;
+    background: #fff;
+    border-radius: 2px;
+    transition: transform 0.35s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.radial-dock .radial-fab .bar.v {
+    transform: rotate(90deg);
+}
+
+.radial-dock .radial-toggle:checked + .radial-fab .bar.h {
+    transform: rotate(45deg);
+}
+
+.radial-dock .radial-toggle:checked + .radial-fab .bar.v {
+    transform: rotate(-45deg);
+}
+
+/* -------------------------------------------------------------
+   Fan-out action items (upper semicircle: -150deg / -90deg / -30deg)
+   ------------------------------------------------------------- */
+.radial-dock .radial-action {
+    width: var(--rm-item-size);
+    height: var(--rm-item-size);
+    background: var(--rm-accent-item);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(120, 60, 220, 0.25);
+
+    /* hidden until opened (also keeps closed items out of the tab order) */
+    visibility: hidden;
+
+    transition:
+        transform 600ms cubic-bezier(0.935, 0, 0.34, 1.33),
+        background 300ms,
+        color 300ms,
+        visibility 0s linear 600ms;
+}
+
+.radial-dock .radial-action i {
+    font-size: 22px;
+    transition: transform 0.3s ease;
+}
+
+.radial-dock .radial-action:hover i {
+    transform: scale(1.2);
+}
+
+.radial-dock .radial-action.ra-1 { transition-delay: 0ms, 0ms, 0ms, 600ms; }
+.radial-dock .radial-action.ra-2 { transition-delay: 70ms, 0ms, 0ms, 600ms; }
+.radial-dock .radial-action.ra-3 { transition-delay: 140ms, 0ms, 0ms, 600ms; }
+
+.radial-dock .radial-toggle:checked ~ .radial-action {
+    visibility: visible;
+    transition-delay: 0ms, 0ms, 0ms, 0s;
+}
+
+.radial-dock .radial-toggle:checked ~ .radial-action.ra-1 {
+    transform: translate(-50%, -50%) rotate(-150deg) translate(var(--rm-radius)) rotate(150deg);
+    transition-delay: 0ms;
+}
+
+.radial-dock .radial-toggle:checked ~ .radial-action.ra-2 {
+    transform: translate(-50%, -50%) rotate(-90deg) translate(var(--rm-radius)) rotate(90deg);
+    transition-delay: 70ms;
+}
+
+.radial-dock .radial-toggle:checked ~ .radial-action.ra-3 {
+    transform: translate(-50%, -50%) rotate(-30deg) translate(var(--rm-radius)) rotate(30deg);
+    transition-delay: 140ms;
+}
+
+/* -------------------------------------------------------------
+   Keep dashboard content clear of the fixed dock
+   (this file is only linked from the three dashboard pages)
+   ------------------------------------------------------------- */
+.dashboard-layout .main-content .content-body {
+    padding-bottom: 8.5rem;
+}
+
+/* -------------------------------------------------------------
+   Responsive
+   ------------------------------------------------------------- */
+@media (max-width: 900px) {
+    .radial-dock {
+        left: calc(50% + 35px); /* sidebar collapses to 70px */
+        width: min(78vw, 360px);
+    }
+
+    .radial-dock .radial-bar {
+        padding: 0 28px;
+    }
+}
+
+@media (max-width: 640px) {
+    .radial-dock {
+        --rm-radius: 96px;
+        --rm-fab-size: 62px;
+        --rm-item-size: 56px;
+        --rm-bar-h: 74px;
+        width: min(74vw, 300px);
+        bottom: 10px;
+    }
+
+    .radial-dock .radial-bar {
+        padding: 0 20px;
+    }
+
+    .radial-dock .radial-item {
+        font-size: 11px;
+        gap: 4px;
+        padding: 4px;
+    }
+
+    .radial-dock .radial-item i {
+        font-size: 18px;
+    }
+
+    .radial-dock .radial-action i {
+        font-size: 18px;
+    }
+
+    .radial-dock .radial-fab .bar {
+        width: 18px;
+        height: 2.2px;
+    }
+
+    .radial-dock .radial-home-dot {
+        width: 90px;
+        bottom: 8px;
+    }
+
+    .dashboard-layout .main-content .content-body {
+        padding-bottom: 7.5rem;
+    }
+}
